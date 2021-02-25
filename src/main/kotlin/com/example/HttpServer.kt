@@ -53,21 +53,20 @@ fun Application.serve(testing: Boolean = false) {
             enable(SerializationFeature.INDENT_OUTPUT)
         }
     }
-    /**
-     * No Auth Routes
-     */
+
     routing {
+        /**
+         * No Auth Routes
+         */
         get("/") {
             call.respondText("Hello World!")
         }
         get("/json/jackson") {
             call.respond(mapOf("hello" to "world"))
         }
-    }
-    /**
-     * Admin Routes
-     */
-    routing {
+        /**
+         * Admin Routes
+         */
         authenticate("admin") {
             get("/protected/route/basic") {
                 val principal = call.principal<UserIdPrincipal>()!!
@@ -78,11 +77,9 @@ fun Application.serve(testing: Boolean = false) {
                 call.respondText("Hello ${principal.name}")
             }
         }
-    }
-    /**
-     * Sending HTTP Requests
-     */
-    routing {
+        /**
+         * No Auth Routes -- Sending HTTP Requests to the HTTP Server
+         */
         // Send request with basic authentication
         get("/request/authenticate") {
             val request = HttpRequestBuilder()
