@@ -1,16 +1,19 @@
 package com.example
 
-import io.ktor.routing.*
-import io.ktor.http.*
-import io.ktor.auth.*
-import io.ktor.util.*
-import io.ktor.features.*
-import org.slf4j.event.*
-import io.ktor.jackson.*
-import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.*
-import io.ktor.response.*
+import io.ktor.auth.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.features.*
+import io.ktor.jackson.*
 import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.util.*
+import org.slf4j.event.Level
+import java.util.*
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
@@ -22,6 +25,7 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.serve(testing: Boolean = false) {
+    val client = HttpClient(CIO)
 
     authentication {
         basic(name = "admin") {
@@ -53,7 +57,6 @@ fun Application.serve(testing: Boolean = false) {
      * No Auth Routes
      */
     routing {
-
         get("/") {
             call.respondText("Hello World!")
         }
@@ -75,11 +78,24 @@ fun Application.serve(testing: Boolean = false) {
                 call.respondText("Hello ${principal.name}")
             }
         }
-        authenticate("admin") {
-            get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
+    }
+    /**
+     * Sending HTTP Requests
+     */
+    routing {
+        // Send request with basic authentication
+        get("/request/authenticate") {
+            val request = HttpRequestBuilder()
+            request.url {
+                host = "0.0.0.0"
+                port = 8080
+                encodedPath = "/user/validate"
             }
+            val auth = Base64.getEncoder().encodeToString("admin:admin".toByteArray())
+            request.header("Authorization", "Basic $auth")
+            val response = client.get<String>(request)
+            log.info(response)
+            call.respondText("You successfully added authorization to your request")
         }
     }
 }
