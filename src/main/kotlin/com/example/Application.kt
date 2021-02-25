@@ -24,10 +24,10 @@ fun main(args: Array<String>): Unit =
 fun Application.module(testing: Boolean = false) {
 
     authentication {
-        basic(name = "myauth1") {
+        basic(name = "admin") {
             realm = "Ktor Server"
             validate { credentials ->
-                if (credentials.name == credentials.password) {
+                if (credentials.name == "admin" && credentials.password == "admin") {
                     UserIdPrincipal(credentials.name)
                 } else {
                     null
@@ -35,13 +35,6 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
-        form(name = "myauth2") {
-            userParamName = "user"
-            passwordParamName = "password"
-            challenge {
-                /**/
-            }
-        }
     }
     install(CallLogging) {
         level = Level.INFO
@@ -56,28 +49,37 @@ fun Application.module(testing: Boolean = false) {
             enable(SerializationFeature.INDENT_OUTPUT)
         }
     }
+    /**
+     * No Auth Routes
+     */
     routing {
+
         get("/") {
             call.respondText("Hello World!")
         }
+        get("/json/jackson") {
+            call.respond(mapOf("hello" to "world"))
+        }
     }
+    /**
+     * Admin Routes
+     */
     routing {
-        authenticate("myauth1") {
+        authenticate("admin") {
             get("/protected/route/basic") {
                 val principal = call.principal<UserIdPrincipal>()!!
                 call.respondText("Hello ${principal.name}")
             }
-        }
-        authenticate("myauth1") {
-            get("/protected/route/form") {
+            get("/user/validate") {
                 val principal = call.principal<UserIdPrincipal>()!!
                 call.respondText("Hello ${principal.name}")
             }
         }
-    }
-    routing {
-        get("/json/jackson") {
-            call.respond(mapOf("hello" to "world"))
+        authenticate("admin") {
+            get("/protected/route/basic") {
+                val principal = call.principal<UserIdPrincipal>()!!
+                call.respondText("Hello ${principal.name}")
+            }
         }
     }
 }
