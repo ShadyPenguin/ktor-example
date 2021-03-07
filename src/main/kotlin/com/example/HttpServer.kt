@@ -35,7 +35,7 @@ fun main(args: Array<String>): Unit =
  * Also note that you can have more then one modules in your application.
  * */
 @Suppress("unused") // Referenced in application.conf
-fun Application.serve(testing: Boolean = false) {
+fun Application.serve() {
     val client = HttpClient(CIO)
 
     authentication {

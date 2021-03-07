@@ -1,6 +1,6 @@
 package com.example
 
-import com.example.Models.Customer
+import com.example.models.Customer
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -19,6 +19,14 @@ val baseCustomer = Customer(
 fun Application.customerRoutes() {
     routing {
         customerById()
+        customerList()
+    }
+}
+
+fun Route.customerList() {
+    get("/customer") {
+        val customers = listOf(baseCustomer, baseCustomer.copy(id=2))
+        call.respond(status = HttpStatusCode.OK, customers)
     }
 }
 
