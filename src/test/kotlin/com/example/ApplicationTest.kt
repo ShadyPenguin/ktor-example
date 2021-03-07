@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.models.Customer
+import com.example.models.customerStorage
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.ContentType
@@ -10,12 +11,27 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 val objectMapper = jacksonObjectMapper()
 
 class ApplicationTest {
+
+
+    @BeforeEach
+    fun beforeEach() {
+        customerStorage.add(baseCustomer)
+    }
+
+    @AfterEach
+    fun afterEach() {
+        customerStorage.clear()
+    }
+
     @Test
     fun testRoot() {
         withTestApplication({ serve() }) {
@@ -29,11 +45,13 @@ class ApplicationTest {
     @Test
     fun `test customer`() {
         withTestApplication({ serve() }) {
-            handleRequest(HttpMethod.Get, "/customer").apply {
+            handleRequest(HttpMethod.Get, "/customer") {
+                val auth = Base64.getEncoder().encodeToString("admin:admin".toByteArray())
+                addHeader(HttpHeaders.Authorization, "Basic $auth")
+            }.apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val expected = listOf(baseCustomer, baseCustomer.copy(id=2))
                 val actual: List<Customer> = objectMapper.readValue(response.content!!)
-                assertEquals(expected, actual)
+                assertEquals(listOf(baseCustomer), actual)
             }
         }
     }
@@ -44,6 +62,8 @@ class ApplicationTest {
             handleRequest(HttpMethod.Post, "/customer") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(objectMapper.writeValueAsString(baseCustomer))
+                val auth = Base64.getEncoder().encodeToString("admin:admin".toByteArray())
+                addHeader(HttpHeaders.Authorization, "Basic $auth")
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
                 val actual: Customer = objectMapper.readValue(response.content!!)

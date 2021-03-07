@@ -6,3 +6,5 @@ data class Customer(
     val age: Int,
     val height: Int, // Centimeters
 )
+
+val customerStorage: MutableList<Customer> = mutableListOf()
