@@ -1,17 +1,29 @@
 package com.example
 
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
-import io.ktor.features.*
-import io.ktor.jackson.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.util.*
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.application.log
+import io.ktor.auth.UserIdPrincipal
+import io.ktor.auth.authenticate
+import io.ktor.auth.authentication
+import io.ktor.auth.basic
+import io.ktor.auth.principal
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.features.CallLogging
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.DefaultHeaders
+import io.ktor.jackson.jackson
+import io.ktor.request.path
+import io.ktor.response.respond
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.routing
 import org.slf4j.event.Level
 import java.util.*
 
@@ -23,7 +35,6 @@ fun main(args: Array<String>): Unit =
  * Also note that you can have more then one modules in your application.
  * */
 @Suppress("unused") // Referenced in application.conf
-@kotlin.jvm.JvmOverloads
 fun Application.serve(testing: Boolean = false) {
     val client = HttpClient(CIO)
 
@@ -74,8 +85,9 @@ fun Application.serve(testing: Boolean = false) {
             }
             get("/user/validate") {
                 val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
+                call.respond(principal)
             }
+            customerRoutes()
         }
         /**
          * No Auth Routes -- Sending HTTP Requests to the HTTP Server
